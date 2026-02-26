@@ -1,0 +1,29 @@
+# Build directories
+build/
+Builds/
+Binaries/
+Intermediate/
+
+# IDE files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+.vscode/
+
+# JUCE files
+JuceLibraryCode/
+
+# Logs and temp files
+*.log
+*.txt
+*.docx
+Snapshot.JPG
+jagat_fx.ico
+tiktok.wfp
+video efek/
+Output/
+create_icon.ps1
+installer.iss
