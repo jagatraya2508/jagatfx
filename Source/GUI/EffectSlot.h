@@ -61,36 +61,58 @@ public:
 
     void paint(juce::Graphics& g) override
     {
-        auto bounds = getLocalBounds().toFloat().reduced(2);
+        auto bounds = getLocalBounds().toFloat().reduced(2.0f);
 
-        // Pedal background (semi-transparent)
-        juce::ColourGradient gradient(
-            juce::Colour(0xB01E1E3A), bounds.getX(), bounds.getY(),
-            juce::Colour(0xB0151530), bounds.getX(), bounds.getBottom(), false);
-        g.setGradientFill(gradient);
-        g.fillRoundedRectangle(bounds, 6.0f);
+        // 1. Dark Background Structure
+        juce::Colour bgColor = isSelected ? juce::Colour(0xFF252535) : juce::Colour(0xFF1E1E28);
+        g.setColour(bgColor);
+        g.fillRoundedRectangle(bounds, 4.0f);
 
-        // Accent border
-        g.setColour(isSelected ? juce::Colours::white : accent.withAlpha(0.6f));
-        g.drawRoundedRectangle(bounds.reduced(1), 6.0f, isSelected ? 2.5f : 1.5f);
+        // 2. Colored Border (Thin)
+        // If it's selected, draw a brighter outline to show it's being edited
+        g.setColour(isSelected ? juce::Colours::white : accent.withAlpha(0.7f));
+        g.drawRoundedRectangle(bounds.reduced(1.0f), 4.0f, isSelected ? 1.5f : 1.0f);
 
-        // Top accent strip
-        g.setColour(accent);
-        g.fillRoundedRectangle(bounds.getX() + 1, bounds.getY() + 1, bounds.getWidth() - 2, 3.0f, 2.0f);
-
+        // 3. Compact Mode Drawing (GP-200 Slot Style)
         if (isCompact)
         {
-            g.setColour(juce::Colour(0xFFAABBCC));
-            g.setFont(juce::Font(12.0f, juce::Font::bold));
-            // Draw text centered below the LED
-            auto textBounds = bounds.withTrimmedTop(25); 
-            g.drawText(effectName, textBounds, juce::Justification::centred);
-        }
+            // The Bypass LED indicator at the top
+            bool isOn = bypassBtn.getToggleState();
+            juce::Colour ledColor = isOn ? juce::Colours::limegreen : juce::Colour(0xFF333333);
+            
+            float ledShadow = isOn ? 8.0f : 0.0f;
+            float ledSize = 6.0f;
+            juce::Rectangle<float> ledArea(bounds.getCentreX() - ledSize/2, bounds.getY() + 8.0f, ledSize, ledSize);
+            
+            // LED Glow
+            if (isOn)
+            {
+                g.setColour(ledColor.withAlpha(0.3f));
+                g.fillEllipse(ledArea.expanded(ledShadow));
+            }
+            
+            // LED Core
+            g.setColour(ledColor);
+            g.fillEllipse(ledArea);
 
-        if (isSelected)
+            // Effect Name Text at bottom
+            g.setColour(juce::Colours::white.withAlpha(isOn ? 0.9f : 0.5f));
+            g.setFont(juce::Font(11.0f, juce::Font::bold));
+            auto textBounds = bounds.withTrimmedTop(bounds.getHeight() * 0.4f); 
+            g.drawText(effectName, textBounds, juce::Justification::centred);
+
+            // Draw a subtle colored bar at the very top (optional aesthetic)
+            g.setColour(accent.withAlpha(0.5f));
+            g.fillRoundedRectangle(bounds.getX() + 6.0f, bounds.getY() + 1.5f, bounds.getWidth() - 12.0f, 2.0f, 1.0f);
+        }
+        else 
         {
-            g.setColour(juce::Colours::white.withAlpha(0.1f));
-            g.fillRoundedRectangle(bounds, 6.0f);
+            // Full editor mode backing drawing
+            if (isSelected)
+            {
+                g.setColour(juce::Colours::white.withAlpha(0.05f));
+                g.fillRoundedRectangle(bounds, 4.0f);
+            }
         }
     }
 
@@ -100,8 +122,10 @@ public:
 
         if (isCompact)
         {
-            // Bypass button specifically small and at top center
-            bypassBtn.setBounds(bounds.removeFromTop(20).withSizeKeepingCentre(60, 20));
+            // Make bypass button invisible but cover the entire top half of the slot
+            // so the user can click anywhere on the upper half to bypass
+            bypassBtn.setAlpha(0.0f); 
+            bypassBtn.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
             return;
         }
 

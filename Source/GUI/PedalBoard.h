@@ -230,38 +230,41 @@ public:
         auto bounds = getLocalBounds().reduced(8);
         
         // --- Bottom: The Evolution Chain (The Chain) ---
-        // Give the slots a fixed height, slightly larger now
-        int rowHeight = 55;
-        auto chainArea = bounds.removeFromBottom(rowHeight * 3 + 4);
+        // Give the slots a sleeker GP-200 fixed height
+        int rowHeight = 45;
+        auto chainArea = bounds.removeFromBottom(rowHeight * 3 + 12); // Add a bit more total room for gaps
         
-        auto row3 = chainArea.removeFromBottom(rowHeight).reduced(0, 2);
+        // Row 3 (Post Effects)
+        auto row3 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
         postLabel.setBounds(row3.removeFromLeft(90));
         int slotWidthRow3 = row3.getWidth() / 6;
-        delay->setBounds(row3.removeFromLeft(slotWidthRow3));
-        reverb->setBounds(row3.removeFromLeft(slotWidthRow3));
-        parametricEQ->setBounds(row3.removeFromLeft(slotWidthRow3));
-        graphicEQ->setBounds(row3.removeFromLeft(slotWidthRow3));
-        talkBox->setBounds(row3.removeFromLeft(slotWidthRow3));
-        autoWah->setBounds(row3);
+        delay->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
+        reverb->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
+        parametricEQ->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
+        graphicEQ->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
+        talkBox->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
+        autoWah->setBounds(row3.reduced(1,0));
 
-        auto row2 = chainArea.removeFromBottom(rowHeight).reduced(0, 2);
+        // Row 2 (Mod & Synth)
+        auto row2 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
         modLabel.setBounds(row2.removeFromLeft(90));
         int slotWidth5 = row2.getWidth() / 5;
-        chorus->setBounds(row2.removeFromLeft(slotWidth5));
-        flanger->setBounds(row2.removeFromLeft(slotWidth5));
-        phaser->setBounds(row2.removeFromLeft(slotWidth5));
-        harmonizer->setBounds(row2.removeFromLeft(slotWidth5));
-        stringSynth->setBounds(row2);
+        chorus->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
+        flanger->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
+        phaser->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
+        harmonizer->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
+        stringSynth->setBounds(row2.reduced(1,0));
 
-        auto row1 = chainArea.removeFromBottom(rowHeight).reduced(0, 2);
+        // Row 1 (Pre Effects)
+        auto row1 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
         preLabel.setBounds(row1.removeFromLeft(90));
-        noiseGate->setBounds(row1.removeFromLeft(slotWidth5));
-        compressor->setBounds(row1.removeFromLeft(slotWidth5));
-        overdrive->setBounds(row1.removeFromLeft(slotWidth5));
-        distortion->setBounds(row1.removeFromLeft(slotWidth5));
-        highGain->setBounds(row1);
+        noiseGate->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
+        compressor->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
+        overdrive->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
+        distortion->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
+        highGain->setBounds(row1.reduced(1,0));
 
-        bounds.removeFromBottom(10); // Spacer between chain and editor
+        bounds.removeFromBottom(8); // Spacer between chain and editor
 
         // --- Top: The Inspector (The Editor) ---
         // Editor takes all remaining space at the top
