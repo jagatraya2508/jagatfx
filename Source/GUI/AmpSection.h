@@ -121,10 +121,10 @@ public:
         for (int i = 0; i < ampTopArea.getWidth(); i += 4) g.drawVerticalLine((int)ampTopArea.getX() + i, ampTopArea.getY(), ampTopArea.getBottom());
         for (int i = 0; i < ampTopArea.getHeight(); i += 4) g.drawHorizontalLine((int)ampTopArea.getY() + i, ampTopArea.getX(), ampTopArea.getRight());
 
-        // "LEAD 800" Text
+        // "JAGAT RAYA SOLUSINDO" Text
         g.setColour(isAmpOn ? juce::Colours::white : juce::Colour(0xFF888888));
-        g.setFont(juce::Font(36.0f, juce::Font::bold));
-        g.drawText("LEAD  800", ampTopArea, juce::Justification::centred);
+        g.setFont(juce::Font(28.0f, juce::Font::bold));
+        g.drawText("JAGAT RAYA SOLUSINDO", ampTopArea, juce::Justification::centred);
 
         // Active Outline for Amp
         g.setColour(isAmpOn ? juce::Colours::white : juce::Colour(0xFFE94560).withAlpha(0.2f));

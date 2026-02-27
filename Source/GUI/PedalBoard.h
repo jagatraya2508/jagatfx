@@ -8,19 +8,16 @@ class PedalBoard : public juce::Component
 public:
     PedalBoard(juce::AudioProcessorValueTreeState& apvts)
     {
-        // === PRE-EFFECTS ROW ===
-
-        // Noise Gate
+        // === EFFECTS ROW 1 ===
         noiseGate = std::make_unique<EffectSlot>(
-            "NOISE GATE", juce::Colour(0xFF00BFA5), apvts, "gateEnabled",
+            "NOISE GATE", "NG", juce::Colour(0xFF00BFA5), apvts, "gateEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"THRESH", "gateThreshold"}, {"ATTACK", "gateAttack"}, {"RELEASE", "gateRelease"}
             });
         addAndMakeVisible(*noiseGate);
 
-        // Compressor
         compressor = std::make_unique<EffectSlot>(
-            "COMPRESSOR", juce::Colour(0xFFFF6F00), apvts, "compEnabled",
+            "COMPRESSOR", "CMP", juce::Colour(0xFFFF6F00), apvts, "compEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"THRESH", "compThreshold"}, {"RATIO", "compRatio"},
                 {"ATTACK", "compAttack"}, {"MAKEUP", "compMakeup"}
@@ -28,148 +25,117 @@ public:
             "compModel", juce::StringArray{"VCA", "Optical", "FET"});
         addAndMakeVisible(*compressor);
 
-        // Overdrive
         overdrive = std::make_unique<EffectSlot>(
-            "OVERDRIVE", juce::Colour(0xFF4CAF50), apvts, "odEnabled",
+            "OVERDRIVE", "OD", juce::Colour(0xFF4CAF50), apvts, "odEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"DRIVE", "odDrive"}, {"TONE", "odTone"}, {"LEVEL", "odLevel"}
             },
             "odModel", juce::StringArray{"Tube Screamer", "Blues Driver", "Klon"});
         addAndMakeVisible(*overdrive);
 
-        // Distortion
         distortion = std::make_unique<EffectSlot>(
-            "DISTORTION", juce::Colour(0xFFF44336), apvts, "distEnabled",
+            "DISTORTION", "DST", juce::Colour(0xFFF44336), apvts, "distEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"GAIN", "distGain"}, {"TONE", "distTone"}, {"LEVEL", "distLevel"}
             },
             "distModel", juce::StringArray{"DS-1", "RAT", "Metal Zone"});
         addAndMakeVisible(*distortion);
 
-        // High Gain
         highGain = std::make_unique<EffectSlot>(
-            "HIGH GAIN", juce::Colour(0xFF9C27B0), apvts, "hgEnabled",
+            "HIGH GAIN", "HG", juce::Colour(0xFF9C27B0), apvts, "hgEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"GAIN", "hgGain"}, {"TONE", "hgTone"}, {"LEVEL", "hgLevel"}
             },
             "hgModel", juce::StringArray{"Rectifier", "5150", "Dual Rec", "Djent"});
         addAndMakeVisible(*highGain);
 
-        // === POST-EFFECTS ROW ===
-
-        // Chorus
-        chorus = std::make_unique<EffectSlot>(
-            "CHORUS", juce::Colour(0xFF2196F3), apvts, "chorusEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"RATE", "chorusRate"}, {"DEPTH", "chorusDepth"}, {"MIX", "chorusMix"}
-            });
-        addAndMakeVisible(*chorus);
-
-        // Flanger
-        flanger = std::make_unique<EffectSlot>(
-            "FLANGER", juce::Colour(0xFF00BCD4), apvts, "flangerEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"RATE", "flangerRate"}, {"DEPTH", "flangerDepth"},
-                {"FB", "flangerFeedback"}, {"MIX", "flangerMix"}
-            });
-        addAndMakeVisible(*flanger);
-
-        // Phaser
-        phaser = std::make_unique<EffectSlot>(
-            "PHASER", juce::Colour(0xFFAB47BC), apvts, "phaserEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"RATE", "phaserRate"}, {"DEPTH", "phaserDepth"},
-                {"FB", "phaserFeedback"}, {"MIX", "phaserMix"}
-            });
-        addAndMakeVisible(*phaser);
-
-        // Harmonizer
-        harmonizer = std::make_unique<EffectSlot>(
-            "HARMONIZER", juce::Colour(0xFFFF9800), apvts, "harmEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"MIX", "harmMix"}
-            },
-            "harmInterval", juce::StringArray{"Min 3rd", "Maj 3rd", "4th", "5th", "Oct Up", "Oct Down"});
-        addAndMakeVisible(*harmonizer);
-
-        // String Synth
-        stringSynth = std::make_unique<EffectSlot>(
-            "STRING SYNTH", juce::Colour(0xFFE91E63), apvts, "stringEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"ATTACK", "stringAttack"}, {"OCTAVE", "stringOctave"},
-                {"BRIGHT", "stringBrightness"}, {"RES", "stringResonance"}, {"MIX", "stringMix"}
-            });
-        addAndMakeVisible(*stringSynth);
-
-        // Delay
-        delay = std::make_unique<EffectSlot>(
-            "DELAY", juce::Colour(0xFF3F51B5), apvts, "delayEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"TIME", "delayTime"}, {"FB", "delayFeedback"}, {"MIX", "delayMix"}, {"MOD", "delayMod"}
-            },
-            "delayModel", juce::StringArray{"Digital", "Analog", "Tape", "Ping-Pong"});
-        addAndMakeVisible(*delay);
-
-        // Reverb
-        reverb = std::make_unique<EffectSlot>(
-            "REVERB", juce::Colour(0xFF607D8B), apvts, "reverbEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"SIZE", "reverbSize"}, {"DAMP", "reverbDamping"},
-                {"PRE", "reverbPreDelay"}, {"MIX", "reverbMix"}
-            },
-            "reverbModel", juce::StringArray{"Hall", "Room", "Plate", "Spring", "Cathedral"});
-        addAndMakeVisible(*reverb);
-
-        // Parametric EQ
-        parametricEQ = std::make_unique<EffectSlot>(
-            "PARA EQ", juce::Colour(0xFF795548), apvts, "peqEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"F1", "peqFreq0"}, {"G1", "peqGain0"},
-                {"F2", "peqFreq1"}, {"G2", "peqGain1"}
-            });
-        addAndMakeVisible(*parametricEQ);
-
-        // Graphic EQ
-        graphicEQ = std::make_unique<EffectSlot>(
-            "GRAPHIC EQ", juce::Colour(0xFF8BC34A), apvts, "geqEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"125", "geqBand2"}, {"500", "geqBand4"},
-                {"2K", "geqBand6"}, {"8K", "geqBand8"}
-            });
-        addAndMakeVisible(*graphicEQ);
-
-        // Talk Box
-        talkBox = std::make_unique<EffectSlot>(
-            "TALK BOX", juce::Colour(0xFFE94560), apvts, "talkEnabled",
-            std::vector<std::pair<juce::String, juce::String>>{
-                {"VOWEL", "talkVowel"}, {"MIX", "talkMix"}
-            });
-        addAndMakeVisible(*talkBox);
-
-        // Auto Wah
         autoWah = std::make_unique<EffectSlot>(
-            "AUTO WAH", juce::Colour(0xFFFFEB3B), apvts, "autoWahEnabled",
+            "AUTO WAH", "WAH", juce::Colour(0xFFFFEB3B), apvts, "autoWahEnabled",
             std::vector<std::pair<juce::String, juce::String>>{
                 {"SENS", "autoWahSens"}, {"ATK", "autoWahAttack"},
                 {"REL", "autoWahRelease"}, {"RANGE", "autoWahRange"}
             });
         addAndMakeVisible(*autoWah);
 
-        // Section labels
-        preLabel.setText("PRE-EFFECTS", juce::dontSendNotification);
-        preLabel.setFont(juce::Font(12.0f, juce::Font::bold));
-        preLabel.setColour(juce::Label::textColourId, juce::Colour(0xFF8899AA));
-        addAndMakeVisible(preLabel);
+        parametricEQ = std::make_unique<EffectSlot>(
+            "PARA EQ", "PEQ", juce::Colour(0xFF795548), apvts, "peqEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"F1", "peqFreq0"}, {"G1", "peqGain0"},
+                {"F2", "peqFreq1"}, {"G2", "peqGain1"}
+            });
+        addAndMakeVisible(*parametricEQ);
 
-        postLabel.setText("POST-EFFECTS", juce::dontSendNotification);
-        postLabel.setFont(juce::Font(12.0f, juce::Font::bold));
-        postLabel.setColour(juce::Label::textColourId, juce::Colour(0xFF8899AA));
-        addAndMakeVisible(postLabel);
+        graphicEQ = std::make_unique<EffectSlot>(
+            "GRAPHIC EQ", "GEQ", juce::Colour(0xFF8BC34A), apvts, "geqEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"125", "geqBand2"}, {"500", "geqBand4"},
+                {"2K", "geqBand6"}, {"8K", "geqBand8"}
+            });
+        addAndMakeVisible(*graphicEQ);
 
-        modLabel.setText("MOD & SYNTH", juce::dontSendNotification);
-        modLabel.setFont(juce::Font(12.0f, juce::Font::bold));
-        modLabel.setColour(juce::Label::textColourId, juce::Colour(0xFF8899AA));
-        addAndMakeVisible(modLabel);
+        // === EFFECTS ROW 2 ===
+        talkBox = std::make_unique<EffectSlot>(
+            "TALK BOX", "TLK", juce::Colour(0xFFE94560), apvts, "talkEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"VOWEL", "talkVowel"}, {"MIX", "talkMix"}
+            });
+        addAndMakeVisible(*talkBox);
+
+        chorus = std::make_unique<EffectSlot>(
+            "CHORUS", "CHO", juce::Colour(0xFF2196F3), apvts, "chorusEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"RATE", "chorusRate"}, {"DEPTH", "chorusDepth"}, {"MIX", "chorusMix"}
+            });
+        addAndMakeVisible(*chorus);
+
+        flanger = std::make_unique<EffectSlot>(
+            "FLANGER", "FLG", juce::Colour(0xFF00BCD4), apvts, "flangerEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"RATE", "flangerRate"}, {"DEPTH", "flangerDepth"},
+                {"FB", "flangerFeedback"}, {"MIX", "flangerMix"}
+            });
+        addAndMakeVisible(*flanger);
+
+        phaser = std::make_unique<EffectSlot>(
+            "PHASER", "PHS", juce::Colour(0xFFAB47BC), apvts, "phaserEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"RATE", "phaserRate"}, {"DEPTH", "phaserDepth"},
+                {"FB", "phaserFeedback"}, {"MIX", "phaserMix"}
+            });
+        addAndMakeVisible(*phaser);
+
+        harmonizer = std::make_unique<EffectSlot>(
+            "HARMONIZER", "HRM", juce::Colour(0xFFFF9800), apvts, "harmEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"MIX", "harmMix"}
+            },
+            "harmInterval", juce::StringArray{"Min 3rd", "Maj 3rd", "4th", "5th", "Oct Up", "Oct Down"});
+        addAndMakeVisible(*harmonizer);
+
+        stringSynth = std::make_unique<EffectSlot>(
+            "STRING SYNTH", "SYN", juce::Colour(0xFFE91E63), apvts, "stringEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"ATTACK", "stringAttack"}, {"OCTAVE", "stringOctave"},
+                {"BRIGHT", "stringBrightness"}, {"RES", "stringResonance"}, {"MIX", "stringMix"}
+            });
+        addAndMakeVisible(*stringSynth);
+
+        delay = std::make_unique<EffectSlot>(
+            "DELAY", "DLY", juce::Colour(0xFF3F51B5), apvts, "delayEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"TIME", "delayTime"}, {"FB", "delayFeedback"}, {"MIX", "delayMix"}, {"MOD", "delayMod"}
+            },
+            "delayModel", juce::StringArray{"Digital", "Analog", "Tape", "Ping-Pong"});
+        addAndMakeVisible(*delay);
+
+        reverb = std::make_unique<EffectSlot>(
+            "REVERB", "RVB", juce::Colour(0xFF607D8B), apvts, "reverbEnabled",
+            std::vector<std::pair<juce::String, juce::String>>{
+                {"SIZE", "reverbSize"}, {"DAMP", "reverbDamping"},
+                {"PRE", "reverbPreDelay"}, {"MIX", "reverbMix"}
+            },
+            "reverbModel", juce::StringArray{"Hall", "Room", "Plate", "Spring", "Cathedral"});
+        addAndMakeVisible(*reverb);
 
         // Parameter Editor
         editor = std::make_unique<ParameterEditor>(apvts);
@@ -218,57 +184,44 @@ public:
         // Pedalboard background (semi-transparent to show background image)
         g.setColour(juce::Colour(0xB00D0D1A));
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 8.0f);
-
-        // Signal flow arrows between rows
-        g.setColour(juce::Colour(0xFF333355));
-        int midY = getHeight() / 2;
-        g.drawArrow(juce::Line<float>(20, (float)midY - 5, 20, (float)midY + 5), 1.5f, 6, 6);
     }
 
     void resized() override
     {
         auto bounds = getLocalBounds().reduced(8);
         
-        // --- Bottom: The Evolution Chain (The Chain) ---
-        // Give the slots a sleeker GP-200 fixed height
-        int rowHeight = 45;
-        auto chainArea = bounds.removeFromBottom(rowHeight * 3 + 12); // Add a bit more total room for gaps
+        // Editor takes top space
+        // Chain takes bottom space
+        int rowHeight = 90; // enough for tall GP200 slots + dropdowns
+        auto chainArea = bounds.removeFromBottom(rowHeight * 2 + 12);
         
-        // Row 3 (Post Effects)
-        auto row3 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
-        postLabel.setBounds(row3.removeFromLeft(90));
-        int slotWidthRow3 = row3.getWidth() / 6;
-        delay->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
-        reverb->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
-        parametricEQ->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
-        graphicEQ->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
-        talkBox->setBounds(row3.removeFromLeft(slotWidthRow3).reduced(1,0));
-        autoWah->setBounds(row3.reduced(1,0));
-
-        // Row 2 (Mod & Synth)
-        auto row2 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
-        modLabel.setBounds(row2.removeFromLeft(90));
-        int slotWidth5 = row2.getWidth() / 5;
-        chorus->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
-        flanger->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
-        phaser->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
-        harmonizer->setBounds(row2.removeFromLeft(slotWidth5).reduced(1,0));
-        stringSynth->setBounds(row2.reduced(1,0));
-
-        // Row 1 (Pre Effects)
-        auto row1 = chainArea.removeFromBottom(rowHeight).reduced(0, 3);
-        preLabel.setBounds(row1.removeFromLeft(90));
-        noiseGate->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
-        compressor->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
-        overdrive->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
-        distortion->setBounds(row1.removeFromLeft(slotWidth5).reduced(1,0));
-        highGain->setBounds(row1.reduced(1,0));
-
         bounds.removeFromBottom(8); // Spacer between chain and editor
-
-        // --- Top: The Inspector (The Editor) ---
-        // Editor takes all remaining space at the top
         editor->setBounds(bounds);
+
+        // Row 1 (Effects 1-8)
+        auto row1 = chainArea.removeFromTop(rowHeight).reduced(0, 3);
+        int slotWidth = row1.getWidth() / 8;
+        noiseGate->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        compressor->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        overdrive->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        distortion->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        highGain->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        autoWah->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        parametricEQ->setBounds(row1.removeFromLeft(slotWidth).reduced(2,0));
+        graphicEQ->setBounds(row1.reduced(2,0));
+
+        chainArea.removeFromTop(6); // gap
+
+        // Row 2 (Effects 9-16)
+        auto row2 = chainArea.removeFromTop(rowHeight).reduced(0, 3);
+        talkBox->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        chorus->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        flanger->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        phaser->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        harmonizer->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        stringSynth->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        delay->setBounds(row2.removeFromLeft(slotWidth).reduced(2,0));
+        reverb->setBounds(row2.reduced(2,0));
     }
 
 private:
@@ -280,5 +233,5 @@ private:
     std::unique_ptr<ParameterEditor> editor;
     EffectSlot* activeSlot = nullptr;
 
-    juce::Label preLabel, modLabel, postLabel;
+    // juce::Label preLabel, modLabel, postLabel; // Deprecated Labels
 };

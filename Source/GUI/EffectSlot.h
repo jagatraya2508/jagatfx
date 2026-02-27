@@ -5,19 +5,21 @@
 class EffectSlot : public juce::Component
 {
 public:
-    EffectSlot(const juce::String& name, juce::Colour accentColor,
+    EffectSlot(const juce::String& name, const juce::String& shortLbl, juce::Colour accentColor,
                juce::AudioProcessorValueTreeState& apvts,
                const juce::String& enableParamID,
                const std::vector<std::pair<juce::String, juce::String>>& knobParams,
                const juce::String& modelParamID = "",
                const juce::StringArray& modelNames = {})
-        : effectName(name), accent(accentColor)
+        : effectName(name), shortName(shortLbl), accent(accentColor)
     {
         // Bypass toggle
         bypassBtn.setClickingTogglesState(true);
         addAndMakeVisible(bypassBtn);
         bypassAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
             apvts, enableParamID, bypassBtn);
+            
+        bypassBtn.onClick = [this] { if (onClick) onClick(); };
 
         // Model selector
         if (modelParamID.isNotEmpty() && modelNames.size() > 0)
@@ -45,6 +47,7 @@ public:
         else bypassBtn.setButtonText(effectName);
 
         for (auto& k : knobs) k->setVisible(!compact);
+        // Hide model selector in compact mode
         if (hasModel) modelSelector.setVisible(!compact);
         resized();
     }
@@ -56,6 +59,8 @@ public:
 
     void mouseDown(const juce::MouseEvent& e) override
     {
+        // When the user clicks the pedal body (not the bypass toggle area)
+        // trigger the selection callback.
         if (onClick) onClick();
     }
 
@@ -63,51 +68,64 @@ public:
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.0f);
 
-        // 1. Dark Background Structure
-        juce::Colour bgColor = isSelected ? juce::Colour(0xFF252535) : juce::Colour(0xFF1E1E28);
-        g.setColour(bgColor);
-        g.fillRoundedRectangle(bounds, 4.0f);
-
-        // 2. Colored Border (Thin)
-        // If it's selected, draw a brighter outline to show it's being edited
-        g.setColour(isSelected ? juce::Colours::white : accent.withAlpha(0.7f));
-        g.drawRoundedRectangle(bounds.reduced(1.0f), 4.0f, isSelected ? 1.5f : 1.0f);
-
-        // 3. Compact Mode Drawing (GP-200 Slot Style)
         if (isCompact)
         {
-            // The Bypass LED indicator at the top
+            // --- GP-200 ICON STYLE ---
             bool isOn = bypassBtn.getToggleState();
-            juce::Colour ledColor = isOn ? juce::Colours::limegreen : juce::Colour(0xFF333333);
+
+            // 1. Category Pill (Top)
+            juce::Rectangle<float> pillArea(bounds.getCentreX() - 16.0f, bounds.getY(), 32.0f, 14.0f);
+            g.setColour(isOn ? juce::Colour(0xFF1E88E5) : juce::Colour(0xFF333344));
+            g.fillRoundedRectangle(pillArea, 4.0f);
+            g.setColour(isOn ? juce::Colours::white : juce::Colour(0xFF888899));
+            g.setFont(juce::Font(10.0f, juce::Font::bold));
+            g.drawText(shortName, pillArea, juce::Justification::centred);
+
+            // 2. Pedal Mini-Icon (Middle)
+            float iconTempW = 34.0f;
+            float iconTempH = 48.0f;
+            juce::Rectangle<float> iconArea(bounds.getCentreX() - iconTempW/2, pillArea.getBottom() + 6.0f, iconTempW, iconTempH);
             
-            float ledShadow = isOn ? 8.0f : 0.0f;
-            float ledSize = 6.0f;
-            juce::Rectangle<float> ledArea(bounds.getCentreX() - ledSize/2, bounds.getY() + 8.0f, ledSize, ledSize);
-            
-            // LED Glow
-            if (isOn)
+            // Selection Glow
+            if (isSelected)
             {
-                g.setColour(ledColor.withAlpha(0.3f));
-                g.fillEllipse(ledArea.expanded(ledShadow));
+                g.setColour(juce::Colour(0xFF4488FF).withAlpha(0.6f));
+                g.fillRoundedRectangle(iconArea.expanded(4.0f), 4.0f);
             }
+
+            // Pedal Base Color
+            g.setColour(accent.withAlpha(isOn ? 1.0f : 0.4f)); // Dim when bypassed
+            g.fillRoundedRectangle(iconArea, 4.0f);
             
-            // LED Core
-            g.setColour(ledColor);
+            // Pedal Top Highlight / 3D feel
+            g.setColour(juce::Colours::white.withAlpha(isOn ? 0.2f : 0.05f));
+            g.fillRoundedRectangle(iconArea.removeFromTop(8.0f), 4.0f);
+
+            // Fake LED on pedal
+            juce::Rectangle<float> ledArea(iconArea.getCentreX() - 2.0f, iconArea.getY() + 4.0f, 4.0f, 4.0f);
+            g.setColour(isOn ? juce::Colours::red : juce::Colour(0xFF331111));
+            if (isOn) { g.fillEllipse(ledArea.expanded(2.0f)); }
             g.fillEllipse(ledArea);
 
-            // Effect Name Text at bottom
-            g.setColour(juce::Colours::white.withAlpha(isOn ? 0.9f : 0.5f));
-            g.setFont(juce::Font(11.0f, juce::Font::bold));
-            auto textBounds = bounds.withTrimmedTop(bounds.getHeight() * 0.4f); 
-            g.drawText(effectName, textBounds, juce::Justification::centred);
+            // Fake Footswitch
+            g.setColour(juce::Colour(0xFF222222));
+            g.fillEllipse(iconArea.getCentreX() - 4.0f, iconArea.getBottom() - 10.0f, 8.0f, 8.0f);
 
-            // Draw a subtle colored bar at the very top (optional aesthetic)
-            g.setColour(accent.withAlpha(0.5f));
-            g.fillRoundedRectangle(bounds.getX() + 6.0f, bounds.getY() + 1.5f, bounds.getWidth() - 12.0f, 2.0f, 1.0f);
+            // Effect Short Label on the pedal
+            g.setColour(juce::Colours::white.withAlpha(isOn ? 0.9f : 0.4f));
+            g.setFont(juce::Font(9.0f, juce::Font::bold));
+            g.drawText(shortName, iconArea.withTrimmedBottom(14.0f), juce::Justification::centredBottom);
         }
         else 
         {
-            // Full editor mode backing drawing
+            // Full editor mode backing
+            juce::Colour bgColor = isSelected ? juce::Colour(0xFF252535) : juce::Colour(0xFF1E1E28);
+            g.setColour(bgColor);
+            g.fillRoundedRectangle(bounds, 4.0f);
+
+            g.setColour(isSelected ? juce::Colours::white : accent.withAlpha(0.7f));
+            g.drawRoundedRectangle(bounds.reduced(1.0f), 4.0f, isSelected ? 1.5f : 1.0f);
+
             if (isSelected)
             {
                 g.setColour(juce::Colours::white.withAlpha(0.05f));
@@ -122,10 +140,12 @@ public:
 
         if (isCompact)
         {
-            // Make bypass button invisible but cover the entire top half of the slot
-            // so the user can click anywhere on the upper half to bypass
+            // Position bypass button ONLY over the top pill area
+            juce::Rectangle<float> fBounds = getLocalBounds().toFloat().reduced(2.0f);
+            juce::Rectangle<float> pillArea(fBounds.getCentreX() - 16.0f, fBounds.getY(), 32.0f, 14.0f);
+            
             bypassBtn.setAlpha(0.0f); 
-            bypassBtn.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
+            bypassBtn.setBounds(pillArea.toNearestInt());
             return;
         }
 
@@ -147,6 +167,7 @@ public:
 
 private:
     juce::String effectName;
+    juce::String shortName;
     juce::Colour accent;
     bool hasModel = false;
     bool isCompact = false;

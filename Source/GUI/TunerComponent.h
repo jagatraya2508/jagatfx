@@ -56,54 +56,129 @@ public:
 
     void paint(juce::Graphics& g) override
     {
-        // Background
-        g.setColour(juce::Colour(0xFF16213E));
-        g.fillRoundedRectangle(getLocalBounds().toFloat(), 6.0f);
+        // 1. Digital Screen Bezel & Background
+        auto bounds = getLocalBounds().toFloat();
         
-        g.setColour(juce::Colour(0xFF333355));
-        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1), 6.0f, 1.0f);
+        // Outer dark bezel
+        g.setColour(juce::Colour(0xFF0D0D15));
+        g.fillRoundedRectangle(bounds, 8.0f);
+        
+        // Inner screen glow
+        auto screenBounds = bounds.reduced(2.0f);
+        juce::ColourGradient screenGrad(juce::Colour(0xFF151A25), screenBounds.getCentreX(), screenBounds.getY(),
+                                        juce::Colour(0xFF0A0C12), screenBounds.getCentreX(), screenBounds.getBottom(), false);
+        g.setGradientFill(screenGrad);
+        g.fillRoundedRectangle(screenBounds, 6.0f);
+        
+        // Inner shadow effect
+        g.setColour(juce::Colour(0x60000000));
+        g.drawRoundedRectangle(screenBounds.reduced(1.0f), 5.0f, 2.0f);
 
-        auto bounds = getLocalBounds().reduced(4);
-        bounds.removeFromLeft(70); // Space for the toggle button
+        auto contentArea = screenBounds.reduced(8.0f);
+        contentArea.removeFromLeft(60); // Space for button
+
+        float scaleWidth = contentArea.getWidth() * 0.9f;
+        float startX = contentArea.getCentreX() - scaleWidth / 2.0f;
 
         if (hasSignal)
         {
-            // Draw note name
-            g.setFont(juce::Font(24.0f, juce::Font::bold));
+            float targetCents = currentCents;
+            bool isInTune = std::abs(targetCents) < 5.0f;
             
-            // Color based on tuning accuracy (green if within 5 cents, else red/yellow)
-            juce::Colour textColour = std::abs(currentCents) < 5.0f ? 
-                                      juce::Colour(0xFF00FF88) : juce::Colour(0xFFFF5555);
+            // Tuner colors
+            juce::Colour baseColor = isInTune ? juce::Colour(0xFF00FFAA) : 
+                                     (targetCents < 0 ? juce::Colour(0xFFFFB347) : juce::Colour(0xFFFF5555));
+            juce::Colour darkColor = baseColor.withAlpha(0.2f);
             
-            g.setColour(textColour);
-            g.drawText(currentNoteName, bounds.removeFromTop(30), juce::Justification::centred);
+            // Layout
+            auto topHalf = contentArea.removeFromTop(contentArea.getHeight() * 0.45f);
+            auto bottomHalf = contentArea;
 
-            // Draw tuning meter
-            auto meterBounds = bounds.reduced(10, 5);
-            float midX = meterBounds.getCentreX();
-            float yPos = meterBounds.getCentreY();
+            // --- NOTE NAME (Large Glowing Text) ---
+            g.setFont(juce::Font(topHalf.getHeight() * 1.8f, juce::Font::bold));
             
-            // Center line
-            g.setColour(juce::Colour(0xFF8888AA));
-            g.drawLine(midX, meterBounds.getY(), midX, meterBounds.getBottom(), 2.0f);
+            // Glow layer
+            g.setColour(baseColor.withAlpha(0.4f));
+            for (float offset = 1.0f; offset <= 3.0f; offset += 1.0f)
+            {
+                g.drawText(currentNoteName, topHalf.translated(0, offset).toNearestInt(), juce::Justification::centredRight);
+                g.drawText(currentNoteName, topHalf.translated(0, -offset).toNearestInt(), juce::Justification::centredRight);
+                g.drawText(currentNoteName, topHalf.translated(offset, 0).toNearestInt(), juce::Justification::centredRight);
+                g.drawText(currentNoteName, topHalf.translated(-offset, 0).toNearestInt(), juce::Justification::centredRight);
+            }
+            // Core text
+            g.setColour(baseColor);
+            g.drawText(currentNoteName, topHalf.toNearestInt(), juce::Justification::centredRight);
 
-            // Needle
-            // Map -50..+50 cents to the width of the meter
-            float mappedX = juce::jmap(displayCents, -50.0f, 50.0f, 
-                                       (float)meterBounds.getX(), (float)meterBounds.getRight());
+            // --- CENTS READOUT ---
+            g.setFont(juce::Font(topHalf.getHeight() * 0.5f, juce::Font::bold));
+            juce::String centsStr = (targetCents > 0 ? "+" : "") + juce::String(targetCents, 1);
+            if (isInTune) centsStr = "IN TUNE";
+            g.setColour(isInTune ? baseColor : juce::Colours::white.withAlpha(0.8f));
+            g.drawText(centsStr, topHalf.toNearestInt(), juce::Justification::centredLeft);
+
+            // --- LED METER SCALE ---
+            float midX = bottomHalf.getCentreX();
+            float yPos = bottomHalf.getCentreY();
             
-            // Clamp
-            mappedX = juce::jlimit((float)meterBounds.getX(), (float)meterBounds.getRight(), mappedX);
-
-            g.setColour(textColour);
-            g.fillEllipse(mappedX - 4.0f, yPos - 4.0f, 8.0f, 8.0f);
-            g.drawLine(mappedX, meterBounds.getY(), mappedX, meterBounds.getBottom(), 3.0f);
+            // Draw background tick marks (-50 to +50)
+            int numTicks = 21; // every 5 cents
+            for (int i = 0; i < numTicks; ++i)
+            {
+                float normalized = (float)i / (numTicks - 1);
+                float x = startX + normalized * scaleWidth;
+                
+                // Bigger tick for center and edges
+                bool isCenter = (i == numTicks / 2);
+                float h = isCenter ? 8.0f : 4.0f;
+                
+                g.setColour(juce::Colour(0x608888AA));
+                g.fillRoundedRectangle(x - 1.0f, yPos - h/2.0f, 2.0f, h, 1.0f);
+            }
+            
+            // --- GLOWING INDICATOR NEEDLE ---
+            float mappedX = juce::jmap(displayCents, -50.0f, 50.0f, startX, startX + scaleWidth);
+            mappedX = juce::jlimit(startX, startX + scaleWidth, mappedX);
+            
+            // Dynamic width based on how out of tune
+            float needleWidth = isInTune ? 14.0f : 8.0f;
+            
+            juce::ColourGradient needleGrad(baseColor, mappedX, yPos - 8.0f, 
+                                            baseColor.withAlpha(0.0f), mappedX, yPos + 8.0f, true);
+            g.setGradientFill(needleGrad);
+            g.fillRoundedRectangle(mappedX - needleWidth/2.0f, yPos - 12.0f, needleWidth, 24.0f, 4.0f);
+            
+            // Solid center
+            g.setColour(baseColor.brighter(0.5f));
+            g.fillRoundedRectangle(mappedX - 2.0f, yPos - 6.0f, 4.0f, 12.0f, 2.0f);
+            
+            // Small arrows pointing towards center if out of tune
+            if (!isInTune)
+            {
+                g.setColour(baseColor);
+                if (targetCents < 0) {
+                    juce::Path arrow; arrow.addTriangle(mappedX + 12, yPos - 3, mappedX + 12, yPos + 3, mappedX + 18, yPos);
+                    g.fillPath(arrow);
+                } else {
+                    juce::Path arrow; arrow.addTriangle(mappedX - 12, yPos - 3, mappedX - 12, yPos + 3, mappedX - 18, yPos);
+                    g.fillPath(arrow);
+                }
+            }
         }
         else
         {
-            g.setFont(juce::Font(14.0f));
-            g.setColour(juce::Colour(0xFF555577));
-            g.drawText("AWAITING SIGNAL...", bounds, juce::Justification::centred);
+            // Idle "AWAITING SIGNAL" state
+            // Use time to create a slow pulsing glow
+            float pulse = std::abs(std::sin(juce::Time::getMillisecondCounterHiRes() * 0.002f));
+            
+            g.setFont(juce::Font(16.0f, juce::Font::bold));
+            g.setColour(juce::Colour(0xFF4A5568).interpolatedWith(juce::Colour(0xFF718096), pulse));
+            g.drawText("AWAITING SIGNAL...", contentArea.toNearestInt(), juce::Justification::centred);
+            
+            // Draw dimmed scale
+            float yPos = contentArea.getBottom() - 15.0f;
+            g.setColour(juce::Colour(0x208888AA));
+            g.drawHorizontalLine((int)yPos, startX, startX + scaleWidth);
         }
     }
 

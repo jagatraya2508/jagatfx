@@ -116,9 +116,8 @@ public:
             g.restoreState();
         }
 
-        // Header line
-        g.setColour(juce::Colour(0xFFE94560));
-        g.fillRect(bounds.removeFromTop(4).reduced(20, 0));
+        // Removed red header line
+        bounds.removeFromTop(4); // Keep spacing if needed
 
         // Title
         g.setColour(juce::Colours::white);

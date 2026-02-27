@@ -26,8 +26,9 @@ public:
         float closeThreshold = juce::Decibels::decibelsToGain(thresholdDb - 6.0f);
         int holdSamples = static_cast<int>(sampleRate * holdTime * 0.001f);
 
-        float envAttackCoeff = std::exp(-1.0f / (sampleRate * 0.0002f));
-        float envReleaseCoeff = std::exp(-1.0f / (sampleRate * 0.015f));
+        // Smoother envelope tracking to eliminate gate stutter ("echo" noise) on high gain tails
+        float envAttackCoeff = std::exp(-1.0f / (sampleRate * 0.001f));
+        float envReleaseCoeff = std::exp(-1.0f / (sampleRate * 0.100f));
         float gainOpenCoeff = std::exp(-1.0f / (sampleRate * attackTime * 0.001f));
         float gainCloseCoeff = std::exp(-1.0f / (sampleRate * releaseTime * 0.001f));
 

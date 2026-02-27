@@ -174,21 +174,7 @@ void GuitarMultiFXEditor::paint(juce::Graphics& g)
 
     if (isLicensed || isTrialMode)
     {
-        // Signal flow indicator between sections
-        auto ampBottom = ampSection.getBottom();
-        auto pedalTop = pedalBoard.getY();
-        int midX = getWidth() / 2;
-
-        g.setColour(juce::Colour(0xFFE94560));
-        g.drawArrow(
-            juce::Line<float>((float)midX, (float)ampBottom + 2, (float)midX, (float)pedalTop - 2),
-            2.0f, 8.0f, 8.0f);
-
-        // Signal flow label
-        g.setFont(9.0f);
-        g.setColour(juce::Colour(0xFF555577));
-        g.drawText("SIGNAL FLOW", midX - 40, (ampBottom + pedalTop) / 2 - 6, 80, 12,
-                   juce::Justification::centred);
+        // Removed signal flow indicator and red lines
     }
 
     // If not licensed and not trial, show message

@@ -41,15 +41,23 @@ public:
         float toneFreq = 800.0f + (tone / 10.0f) * 3500.0f;
         float outputLevel = level / 10.0f;
 
-        auto toneCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, toneFreq);
-        for (auto& f : toneFilter)
-            *f.coefficients = *toneCoeffs;
+        if (toneFreq != lastToneFreq)
+        {
+            auto toneCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, toneFreq);
+            for (auto& f : toneFilter)
+                *f.coefficients = *toneCoeffs;
+            lastToneFreq = toneFreq;
+        }
 
-        auto tightCoeffs = tight
-            ? juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 100.0f, 1.0f)
-            : juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 50.0f, 0.7f);
-        for (auto& f : tightFilter)
-            *f.coefficients = *tightCoeffs;
+        if (tight != lastTight)
+        {
+            auto tightCoeffs = tight
+                ? juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 100.0f, 1.0f)
+                : juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 50.0f, 0.7f);
+            for (auto& f : tightFilter)
+                *f.coefficients = *tightCoeffs;
+            lastTight = tight;
+        }
 
         int numSamples = buffer.getNumSamples();
         int numChannels = buffer.getNumChannels();
@@ -149,9 +157,14 @@ private:
     int model = 0;
     float gain = 7.0f, tone = 5.0f, level = 5.0f;
     bool tight = true;
+
+    float lastToneFreq = -1.0f;
+    bool lastTight = false;
+
     juce::dsp::IIR::Filter<float> toneFilter[2];
     juce::dsp::IIR::Filter<float> tightFilter[2];
     juce::dsp::IIR::Filter<float> presenceFilter[2];
     juce::dsp::IIR::Filter<float> midBody[2];       // Mid body for thickness
     juce::dsp::IIR::Filter<float> smoothFilter[2];   // Anti-fizz
 };
+
